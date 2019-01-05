@@ -1,7 +1,7 @@
 {
-  "name": "vidjot",
+  "name": "NodeJournal",
   "version": "1.0.0",
-  "description": "Web App for storing video ideas.",
+  "description": "Web App for taking notes on.",
   "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
