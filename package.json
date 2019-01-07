@@ -1,5 +1,5 @@
 {
-  "name": "NodeJournal",
+  "name": "nodejournal",
   "version": "1.0.0",
   "description": "Web App for taking notes on.",
   "main": "app.js",
