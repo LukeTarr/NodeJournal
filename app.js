@@ -8,6 +8,10 @@ const session = require('express-session');
 
 const app = express();
 
+//Load Routes
+const notes = require('./routes/notes');
+const users = require('./routes/users');
+
 // Map global promise - get rid of warning
 mongoose.Promise = global.Promise;
 // Connect to mongoose
@@ -67,99 +71,9 @@ app.get('/about', (req, res) => {
   res.render('about');
 });
 
-// Note Index Page
-app.get('/notes', (req, res) => {
-  Note.find({})
-    .sort({
-      date: 'desc'
-    })
-    .then(notes => {
-      res.render('notes/index', {
-        notes: notes
-      });
-    });
-});
-
-// Add Note Form
-app.get('/notes/add', (req, res) => {
-  res.render('notes/add');
-});
-
-// Edit Note Form
-app.get('/notes/edit/:id', (req, res) => {
-  Note.findOne({
-      _id: req.params.id
-    })
-    .then(note => {
-      res.render('notes/edit', {
-        note: note
-      });
-    });
-});
-
-// Process Form
-app.post('/notes', (req, res) => {
-  let errors = [];
-
-  if (!req.body.title) {
-    errors.push({
-      text: 'Please add a title'
-    });
-  }
-  if (!req.body.details) {
-    errors.push({
-      text: 'Please add some details'
-    });
-  }
-
-  if (errors.length > 0) {
-    res.render('notes/add', {
-      errors: errors,
-      title: req.body.title,
-      details: req.body.details
-    });
-  } else {
-    const newUser = {
-      title: req.body.title,
-      details: req.body.details
-    }
-    new Note(newUser)
-      .save()
-      .then(note => {
-        req.flash('success_msg', 'Note added.');
-        res.redirect('/notes');
-      })
-  }
-});
-
-//Edit Form process
-app.put('/notes/:id', (req, res) => {
-  Note.findOne({
-      _id: req.params.id
-    })
-    .then(note => {
-      //new values
-      note.title = req.body.title;
-      note.details = req.body.details;
-
-      note.save()
-        .then(note => {
-          req.flash('success_msg', 'Note updated.');
-          res.redirect('/notes')
-        })
-    });
-});
-
-//Delete Note
-app.delete('/notes/:id', (req, res) => {
-  Note.deleteOne({
-      _id: req.params.id
-    })
-    .then(() => {
-      req.flash('success_msg', 'Note removed.');
-      res.redirect('/notes')
-    })
-});
+//use Routes
+app.use('/notes', notes);
+app.use('/users', users);
 
 const port = 3000;
 
