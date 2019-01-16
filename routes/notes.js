@@ -1,14 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
+const {ensureAuthenticated} = require('../helpers/auth');
+
 
 //Load Note Model
 require('../models/Note');
 const Note = mongoose.model('notes');
 
 // Note Index Page
-router.get('/', (req, res) => {
-  Note.find({})
+router.get('/', ensureAuthenticated, (req, res) => {
+  Note.find({user: req.user.id})
     .sort({
       date: 'desc'
     })
@@ -20,24 +22,30 @@ router.get('/', (req, res) => {
 });
 
 // Add Note Form
-router.get('/add', (req, res) => {
+router.get('/add', ensureAuthenticated, (req, res) => {
   res.render('notes/add');
 });
 
 // Edit Note Form
-router.get('/edit/:id', (req, res) => {
+router.get('/edit/:id', ensureAuthenticated, (req, res) => {
   Note.findOne({
       _id: req.params.id
     })
     .then(note => {
-      res.render('notes/edit', {
-        note: note
-      });
+      if(note.user != req.user.id){
+        req.flash('error_msg', 'Not Authorized');
+        res.redirect('/notes');
+      } else {
+        res.render('notes/edit', {
+          note: note
+        });
+      }
+      
     });
 });
 
 // Process Form
-router.post('/', (req, res) => {
+router.post('/', ensureAuthenticated, (req, res) => {
   let errors = [];
 
   if (!req.body.title) {
@@ -60,19 +68,20 @@ router.post('/', (req, res) => {
   } else {
     const newUser = {
       title: req.body.title,
-      details: req.body.details
-    }
+      details: req.body.details,
+      user: req.user.id
+    };
     new Note(newUser)
       .save()
       .then(note => {
         req.flash('success_msg', 'Note added.');
         res.redirect('/notes');
-      })
+      });
   }
 });
 
 //Edit Form process
-router.put('/:id', (req, res) => {
+router.put('/:id', ensureAuthenticated, (req, res) => {
   Note.findOne({
       _id: req.params.id
     })
@@ -84,20 +93,20 @@ router.put('/:id', (req, res) => {
       note.save()
         .then(note => {
           req.flash('success_msg', 'Note updated.');
-          res.redirect('/notes')
-        })
+          res.redirect('/notes');
+        });
     });
 });
 
 //Delete Note
-router.delete('/:id', (req, res) => {
+router.delete('/:id', ensureAuthenticated, (req, res) => {
   Note.deleteOne({
       _id: req.params.id
     })
     .then(() => {
       req.flash('success_msg', 'Note removed.');
-      res.redirect('/notes')
-    })
+      res.redirect('/notes');
+    });
 });
 
 module.exports = router;
